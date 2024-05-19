@@ -1,0 +1,108 @@
+---> Flow of operation when next app is ran is from package.json command ---> Layout.tsx ---> Page.tsx
+
+
+---> React introduced a new way of creating its components
+    (a) Server components:
+        -- In next, all components are server components by default
+        -- They have the ability to tun tasks like reading files or fetching data from a database.
+        -- However, server components don't have the ability to use hooks or handle user interactions
+    (b) Client components:
+        -- To create a client component, 'use client' has to be added at the top of the component file
+        -- Client components can't perform tasks like reading files, but they have the ability to use hooks and manage interactions
+
+
+---> Routing conventions
+    (a) All routes must be placed inside the app folder
+    (b) Every file that corresponds to a route must be named page.js or page.tsx
+    (c) Every folder corresponds to a path segment in the browser url
+    (d) The page.tsx file within the app folder maps to the root of the domain i.e landing page.
+    (e) the layout.tsx file is always auto created in app folder
+    (f) Wrapping the name of a folder with Square brackets is used for dynamic routes
+    (g) Wrapping the name of a folder with () omits the file as a route name
+    (h) an underscore before name of folder (i.e _lib) will make the folder private
+
+
+---> Templates
+    -- They are similar to layouts in that they wrap each child layout or page
+    -- Difference is when a user navigates between routes that share a template, a new instance of the component is mounted, DOM elements are recreated, state is not preserved, and effects are re-synchronized
+    -- A template can be defined by exporting a default react component from a template.js or template.tsx file
+    -- Similar to layouts, templates also should accept a children prop which will render the nested segments in the route
+
+
+
+---> Parallel Routes
+    -- Parallel routes are defined using a feature known as slots
+    -- Slots help structure contents in a modular fashion
+    -- The `@folder` naming convention is used to define a slot
+    -- Each slot is then passed as a prop to its corresponding `layout.tsx` file.
+    -- A benefit of parallel route is the ability to split a single layout into various slots, making the code manageable
+    -- independent route handling and sub-navigation are the most important benefits of parallel routing
+    -- Each slots of the layout can have its own loading and error states
+    -- This granular control is particularly beneficial in scenarios where different sections of the page load at varying speeds or encounter unique errors
+    -- Each slots of the layout can function as a mini application complete with its own navigation and state management
+
+
+---> Intercepting Routes
+    -- intercepting routes allow the intercepting or the stopping of the default behaviour to present an alternate view or component when navigating through the UI, while still preserving  the intended route for scenarios like page reload
+    -- (.)FolderName is used to identify an intercepting route. This will match segments on the same level
+    -- (..)FolderName is used to identify an intercepting route. This will match segments one level above
+    -- (..)(..)FolderName is used to identify an intercepting route. This will match segments two levels above
+    -- (...)FolderName is used to identify an intercepting route. This will match segments from the root app directory
+
+
+
+---> Rendering
+    -- Client Side Rendering (CSR): A method of rendering where the component code is transformed into a UI directly within the browser (the client).
+    Drawbacks :
+        (a) Generating HTML that mainly contains a single div tag is not optimal for SEO, as it provides little content for search engines to index
+        (b) Having the browser(client) handle all the work, such as fetching data, computing the UI, and making the HTML interactive, can slow things down. Users might see a blank screen or a loading spinner while the page loads.
+        (c) Each new feature added to the app increases the size of the JS bundle, prolonging the wait time for users to see the UI
+
+    -- Server Side Solutions: This can be divided into two
+        (a) Static Site Generation (SSG): This occurs at build time when the application is deployed on the server. This results in pages that are already rendered and ready to server. It is ideal for content that doesn't change often like blog posts
+        (b) Server Side Rendering (SSR): This renders pages on-demand in response to user requests. It is suitable for personalized content like social media feeds, where the html depends on the logged-in user
+
+
+    Hydration: During this process, react takes control in the browser, reconstructing the component tree in memory based on the static html that was served. It carefully plans the placement of interactive elements within the tree. Then, react proceeds to bind the necessary JS logic to these elements. This involves initializing the application state, attaching event handlers for actions such as clicks and mouseovers, and setting up any other dynamic functionalities required for a fully interactive user experience
+
+
+    Drawbacks:
+        (a) Everything has to be fetched before anything can be shown. Components cannot start rendering and then pause or wait while the data is still being loaded. This can delay the server's response time to the browser, as the server must finish collecting all necessary data before any part of the page can be sent to the client.
+        (b) Everything has to load before anything can be hydrated. For successful hydration, where react adds interactivity to the server-rendered html, the component tree in the browser must exactly match the server-generated component tree
+        (c) Everything has to be hydrated before interacting with anything. React hydrates the component tree in a single pass, meaning once it starts hydrating, it won't stop until it's finished with the entire tree
+        (d) Increased bundle sizes leading to the excessive downloads for users
+        (e) Unnecessary hydration delaying interactivity
+        (f) Extensive client side processing that could result in poor performance
+
+
+    The drawbacks to server side solutions create a scenario of all or nothing.
+    To solve this problem, the Suspense SSR architecture is used
+
+    Suspense SSR Architecture: Using the <Suspense> component to unlock two major SSR features:
+    (a) HTML streaming on the server:
+        -- Everything doesn't have to be fetched before showing something
+        -- If a particular section delays the initial html, it can be seamlessly integrated into the stream later.
+
+        Drawback:
+        -- Until the JS for the main section is loaded, client-side app hydration cannot start
+        -- If the JS bundle for the main section is large, this could significantly delay the process
+
+        A solution to the drawback above is code splitting
+
+        Code Splitting: This allows the marking of specific code segments as not immediately necessary for loading, signalling the bundler to segregate them into separate <script> tags. Using React.lazy for code splitting enables the separation of the main section's code from the primary JS bundle
+
+    (b) Selective hydration on the client: By wrapping the main section within <Suspense>, it indicates to react that it should not only prevent the rest of the page from rendering but also from hydrating. Selective hydration allows for the hydration of sections as they become available, before the rest of the html and the JS code are fully downloaded. This now solves the issue of having to hydrate everything to interact with anything. In scenarios where multiple components are awaiting hydration, React prioritizes hydration based on user interactions
+
+
+    The last three drawbacks of Server side solutions brings the birth of a solution called React Server Components. This approach aims to leverage the strengths of both server and client environs, optimizing for efficiency, load times, and interactivity
+
+
+
+
+
+
+
+
+
+
+
